@@ -1,0 +1,21 @@
+services:
+  proxy:
+    container_name: ecs_proxy
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    ports:
+      - 8000:80
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/usr/share/nginx/html
+  app:
+    container_name: ecs_app
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    volumes:
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./backend:/var/www/html
+    
+
