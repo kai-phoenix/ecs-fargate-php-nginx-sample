@@ -2,6 +2,7 @@
 
 ## 概要
 PHP-FPM + Nginxの２コンテナ構成をAmazonECS on Fargateで動作確認するためのサンプルです。
+(5/17) buildspec.ymlを追加し自動ビルド構成追加
 
 ## 構成
 Browser

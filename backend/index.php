@@ -1,2 +1,2 @@
 <?php
-echo "ECS Docker Sample!";
+echo "ECS Docker Program";
