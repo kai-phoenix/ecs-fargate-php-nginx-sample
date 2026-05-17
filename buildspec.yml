@@ -5,43 +5,43 @@ env:
     PHP_REPOSITORY_NAME: ecs-sample-php
     IMAGE_TAG: latest
   
-  phases:
-    pre_build:
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - REGION=$AWS_DEFAULT_REGION
+      - echo "REGION=$REGION"
+      - echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID"
+      - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+
+      - echo Setting image URIs...
+      - NGINX_IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$NGINX_REPOSITORY_NAME:$IMAGE_TAG
+      - PHP_IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$PHP_REPOSITORY_NAME:$IMAGE_TAG
+      - echo $NGINX_IMAGE_URI
+      - echo $PHP_IMAGE_URI
+    build:
       commands:
-        - echo Logging in to Amazon ECR...
-        - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        - REGION=$AWS_DEFAULT_REGION
-        - echo "REGION=$REGION"
-        - echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID"
-        - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+        - echo Build started on `date`
+        - echo Building nginx image...
+        - docker buildx build --platform linux/amd64 --provenance=false -f docker/nginx/Dockerfile -t $NGINX_IMAGE_URI --load .
+        - echo Building php image...
+        - docker buildx build --platform linux/amd64 --provenance=false -f docker/php/Dockerfile -t $PHP_IMAGE_URI --load .
 
-        - echo Setting image URIs...
-        - NGINX_IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$NGINX_REPOSITORY_NAME:$IMAGE_TAG
-        - PHP_IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$PHP_REPOSITORY_NAME:$IMAGE_TAG
-        - echo $NGINX_IMAGE_URI
-        - echo $PHP_IMAGE_URI
-      build:
-        commands:
-          - echo Build started on `date`
-          - echo Building nginx image...
-          - docker buildx build --platform linux/amd64 --provenance=false -f docker/nginx/Dockerfile -t $NGINX_IMAGE_URI --load .
-          - echo Building php image...
-          - docker buildx build --platform linux/amd64 --provenance=false -f docker/php/Dockerfile -t $PHP_IMAGE_URI --load .
+    post_build:
+      commands:
+        - echo Build completed on `date`
+        - echo Pushing nginx image to ECR...
+        - docker push $NGINX_IMAGE_URI
 
-      post_build:
-        commands:
-          - echo Build completed on `date`
-          - echo Pushing nginx image to ECR...
-          - docker push $NGINX_IMAGE_URI
+        - echo Pushing php image to ECR...
+        - docker push $PHP_IMAGE_URI
 
-          - echo Pushing php image to ECR...
-          - docker push $PHP_IMAGE_URI
-
-          - echo Writing image definitions file...
-          - printf '[{"name":"nginx","imageUri":"%s"},{"name":"php","imageUri":"%s"}]' $NGINX_IMAGE_URI $PHP_IMAGE_URI > image_definitions.json
-          - cat image_definitions.json
+        - echo Writing image definitions file...
+        - printf '[{"name":"nginx","imageUri":"%s"},{"name":"php","imageUri":"%s"}]' $NGINX_IMAGE_URI $PHP_IMAGE_URI > image_definitions.json
+        - cat image_definitions.json
       
-      artifacts:
-        files:
-          - image_definitions.json
+artifacts:
+  files:
+    - image_definitions.json
           
