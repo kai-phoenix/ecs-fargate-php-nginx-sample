@@ -38,10 +38,10 @@ phases:
       - docker push $PHP_IMAGE_URI
 
       - echo Writing image definitions file...
-      - printf '[{"name":"nginx","imageUri":"%s"},{"name":"php","imageUri":"%s"}]' $NGINX_IMAGE_URI $PHP_IMAGE_URI > image_definitions.json
-      - cat image_definitions.json
+      - printf '[{"name":"nginx","imageUri":"%s"},{"name":"php","imageUri":"%s"}]' $NGINX_IMAGE_URI $PHP_IMAGE_URI > imagedefinitions.json
+      - cat imagedefinitions.json
       
 artifacts:
   files:
-    - image_definitions.json
+    - imagedefinitions.json
           
